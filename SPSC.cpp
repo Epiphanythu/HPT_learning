@@ -3,6 +3,7 @@
 #include <atomic>
 #include <array>
 #include <chrono>
+#include <stop_token>
 
 template<typename T, size_t CAPACITY>
 class SPSCRingBuffer {
@@ -22,13 +23,13 @@ public:
 
         size_t next = (w + 1) % CAPACITY;
 
-        if (next == read_index.load(std::memory_order_acquire)) {
+        if (next == read_index.load(std::memory_order_acquire)) {  // 读到 write_index 后buffer 数据一定已经写入
             return false; // 队列满
         }
 
         buffer[w] = value;
 
-        write_index.store(next, std::memory_order_release); // 先写数据再更新 
+        write_index.store(next, std::memory_order_release); // 先写数据再更新 发布信号
 
         return true;
     }
